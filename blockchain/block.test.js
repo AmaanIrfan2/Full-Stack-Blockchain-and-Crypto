@@ -1,7 +1,7 @@
 const hexToBinary = require('hex-to-binary');
 const Block = require('./block'); //This line imports the Block class from block.js
-const { GENESIS_DATA, MINE_RATE } = require('./config'); 
-const cryptoHash = require('./crypto-hash');
+const { GENESIS_DATA, MINE_RATE } = require('../config'); 
+const cryptoHash = require('../util/crypto-hash');
 
 describe('Block', () => { //describe() is a function provided by Jest, 'Block' is like a string for identification, and () => creates the function
 

@@ -1,6 +1,6 @@
-const Blockchain = require('./blockchain'); // Importing the Blockchain class
+const Blockchain = require('./index'); // Importing the Blockchain class
 const Block = require('./block'); // Importing the Block class
-const cryptoHash= require('./crypto-hash');
+const cryptoHash= require('../util/crypto-hash');
 describe('Blockchain', () => {
     let blockchain, newChain, originalChain;
 

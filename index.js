@@ -1,28 +1,56 @@
-//This code is creating a simple blockchain API using Express.js
-
-const express= require('express'); //library to create web servers easily 
-const Blockchain= require('./blockchain');
-const bodyParser= require('body-parser');
-
-const blockchain= new Blockchain();
-const app= new express();
-
-//Allows the server to handle JSON data in requests
-app.use(bodyParser.json());
-
-//API Endpoint to Get All Blocks
-app.get('/api/blocks', (req, res) => {  
-    res.json(blockchain.chain);
-});
-
-//API Endpoint to Add a New Block
-app.post('/app/mine', (req, res) => {
-    const {data} = req.body; // Extract data sent in the request
-
-    blockchain.addBlock({data}); //Add a new block to the blockchain
-
-    res.redirect('/api/blocks'); //Redirect the user to see the updated blockchain
-});
-const PORT= 3000; //port on localhost 
-
-app.listen(PORT, () => console.log(`listening to the localhost ${PORT}`));
+const bodyParser = require('body-parser');
+ const express = require('express');
+ const axios = require('axios');
+ const Blockchain = require('./blockchain/index');
+ const PubSub = require('./app/pubsub');
+ 
+ const app = express();
+ const blockchain = new Blockchain();
+ const pubsub = new PubSub({ blockchain });
+ 
+ const DEFAULT_PORT = 3000;
+ const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
+ 
+ setTimeout(() => pubsub.broadcastChain(), 1000);
+ 
+ app.use(bodyParser.json());
+ 
+ app.get('/api/blocks', (req, res) => {
+   res.json(blockchain.chain);
+ });
+ 
+ app.post('/api/mine', (req, res) => {
+   const { data } = req.body;
+ 
+   blockchain.addBlock({ data });
+ 
+   pubsub.broadcastChain();
+ 
+   res.redirect('/api/blocks');
+ });
+ 
+ const syncChains = async () => {
+    try {
+      const { data: rootChain } = await axios.get(`${ROOT_NODE_ADDRESS}/api/blocks`);
+      console.log('Replacing chain with', rootChain);
+      blockchain.replaceChain(rootChain);
+    } catch (error) {
+      console.error('Error syncing chains:', error.message);
+    }
+  };
+ 
+ let PEER_PORT;
+ 
+ if (process.env.GENERATE_PEER_PORT === 'true') {
+   PEER_PORT = DEFAULT_PORT + Math.ceil(Math.random() * 1000);
+ }
+ 
+ const PORT = PEER_PORT || DEFAULT_PORT;
+ app.listen(PORT, () => {
+   console.log(`listening at localhost:${PORT}`);
+ 
+   syncChains();
+   if (PORT !== DEFAULT_PORT) {
+     syncChains();
+   }
+ });

@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest --watchAll"
+    "test": "jest --watchAll",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "start-redis": " wsl redis-server --daemonize yes"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +16,11 @@
     "jest": "^29.7.0"
   },
   "dependencies": {
-    "cryptochain": "file:"
+    "cryptochain": "file:",
+    "express": "^4.21.2",
+    "hex-to-binary": "^1.0.1",
+    "pubnub": "^9.1.0",
+    "redi": "^0.1.0",
+    "redis": "^4.7.0"
   }
 }

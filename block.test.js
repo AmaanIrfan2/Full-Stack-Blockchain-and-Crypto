@@ -1,15 +1,18 @@
+const hexToBinary = require('hex-to-binary');
 const Block = require('./block'); //This line imports the Block class from block.js
-const { GENESIS_DATA } = require('./config'); 
+const { GENESIS_DATA, MINE_RATE } = require('./config'); 
 const cryptoHash = require('./crypto-hash');
 
 describe('Block', () => { //describe() is a function provided by Jest, 'Block' is like a string for identification, and () => creates the function
 
     //These lines create variables to store expected values, and the values are dummy values 
-    const timestamp = 'a-date';
+    const timestamp = 2000;
     const lastHash = 'lastHash';
     const hash = 'hash';
-    const data = 'data';
-    const block = new Block({ timestamp, lastHash, hash, data }); //This line creates a new block using the Block class.
+    const data = ['blockchain', 'data'];
+    const nonce= 1;
+    const difficulty= 1;
+    const block = new Block({ timestamp, lastHash, hash, data, nonce, difficulty }); //This line creates a new block using the Block class.
 
 
     //it is a jest fnction, the line is a string for description, and then main logic in function 
@@ -20,6 +23,8 @@ describe('Block', () => { //describe() is a function provided by Jest, 'Block' i
         expect(block.lastHash).toEqual(lastHash);
         expect(block.hash).toEqual(hash);
         expect(block.data).toEqual(data);
+        expect(block.nonce).toEqual(nonce);
+        expect(block.difficulty).toEqual(difficulty);
     });
 
     //testing the genesis block
@@ -59,7 +64,40 @@ describe('Block', () => { //describe() is a function provided by Jest, 'Block' i
 
         it('creates valid SHA256 based on valid inputs', () => {
             expect(minedBlock.hash)
-            .toEqual(cryptoHash(minedBlock.timestamp, lastBlock.hash, data));
+            .toEqual(cryptoHash(
+                minedBlock.timestamp, 
+                minedBlock.nonce, 
+                minedBlock.difficulty, 
+                lastBlock.hash, 
+                data));
+        });
+
+        it('sets the `hash` that matches the hash diffculty criteria', () => {
+            expect(hexToBinary(minedBlock.hash).substring(0, minedBlock.difficulty)).toEqual('0'.repeat(minedBlock.difficulty));
+        });
+
+        it('adjusts the difficulty', () => {
+            const possibleResults= [lastBlock.difficulty + 1, lastBlock.difficulty - 1];
+
+            expect(possibleResults.includes(minedBlock.difficulty)).toBe(true);
+        });
+    });
+
+    describe('adjustDifficulty', () => {
+        it('raises the difficulty for a quickly mined block', ()=> {
+            expect(Block.adjustDifficulty({originalBlock: block, 
+                timestamp: block.timestamp + MINE_RATE - 100})).toEqual(block.difficulty+1);
+        });
+
+        it('decreases the difficulty for a slowly mined block', ()=> {
+            expect(Block.adjustDifficulty({originalBlock: block, 
+                timestamp: block.timestamp + MINE_RATE + 100})).toEqual(block.difficulty-1);
+        });
+
+        it('has a lower limit of 1', ()=>{
+            block.difficulty= -1;
+
+            expect(Block.adjustDifficulty({originalBlock: block})).toEqual(1);
         });
     });
 });

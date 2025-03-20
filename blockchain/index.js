@@ -1,5 +1,5 @@
 const Block = require('./block'); // Importing the Block class from block.js
-const cryptoHash = require('../util/crypto-hash');
+const {cryptoHash} = require('../util');
 
 class Blockchain {
     constructor() {

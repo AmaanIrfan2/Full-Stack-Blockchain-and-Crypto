@@ -9,6 +9,9 @@
     "dev-peer": "cross-env GENERATE_PEER_PORT='true' nodemon index.js",
     "start-redis": " wsl redis-server --daemonize yes"
   },
+  "jest": {
+    "testEnvironment": "node"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -18,10 +21,12 @@
   },
   "dependencies": {
     "cryptochain": "file:",
+    "elliptic": "^6.6.1",
     "express": "^4.21.2",
     "hex-to-binary": "^1.0.1",
     "pubnub": "^9.1.0",
     "redi": "^0.1.0",
-    "redis": "^4.7.0"
+    "redis": "^4.7.0",
+    "uuid": "^11.1.0"
   }
 }

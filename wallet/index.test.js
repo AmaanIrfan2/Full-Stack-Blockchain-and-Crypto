@@ -1,3 +1,4 @@
+const Transaction = require('./transaction');
 const Wallet= require('./index');
 const { verifySignature } = require("../util");
 
@@ -38,5 +39,37 @@ describe('Wallet', () => {
                 })
             ).toBe(false);
         });  
+    });
+
+    describe('createTransaction()', ()=> {
+        describe('amount exceeds the balance', ()=> {
+            it('throws an error', () =>{
+                expect(() => wallet.createTransaction({ amount: 999999, recipient: 'foo-recipient'}))
+                .toThrow('Amount exceeds balance');
+            });
+        });
+
+        describe('amount is valid', ()=>{
+            let amount, transaction, recipient;
+
+            beforeEach(() =>{    
+                amount= 50;
+                recipient= 'foo-recipient';
+                transaction= wallet.createTransaction({amount, recipient});
+            });
+
+            it('creates an instance of transaction', ()=>{
+                expect(transaction instanceof Transaction).toBe(true);
+            });
+
+            it('matches the transaction with the input wallet', ()=>{
+                expect(transaction.input.address).toEqual(wallet.publicKey);
+            });
+
+            it('outputs the amount to the recepient', ()=>{
+                expect(transaction.outputMap[recipient]).toEqual(amount);
+            });
+
+        });
     });
 });

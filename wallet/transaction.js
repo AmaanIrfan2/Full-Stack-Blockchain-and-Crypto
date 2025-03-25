@@ -1,4 +1,5 @@
 const { v1: uuidv1 } = require('uuid');
+const {verifySignature} = require('../util');
 
 class Transaction{
     constructor({senderWallet, recipient, amount}){
@@ -22,6 +23,41 @@ class Transaction{
             signature: senderWallet.sign(outputMap)
         };
     }
+
+    update({senderWallet, recipient, amount}){
+
+        if(amount > this.outputMap[senderWallet.publicKey]){
+            throw new Error ('Amount exceeds balance');
+        }
+
+        if(!this.outputMap[recipient]){
+            this.outputMap[recipient]= amount;
+        } else{
+            this.outputMap[recipient]= this.outputMap[recipient] + amount;    
+        }
+
+        this.outputMap[senderWallet.publicKey] =  this.outputMap[senderWallet.publicKey] - amount;
+
+        this.input = this.createInput({senderWallet, outputMap: this.outputMap});
+    };
+
+    static validTransactions(transaction){
+        const{input: {amount, signature, address}, outputMap} = transaction;
+
+        const outputTotal= Object.values(outputMap)
+        .reduce((total, outputAmount) => total + outputAmount);
+
+        if(amount !=outputTotal){
+            console.error('invalid transactions from ${address}');
+            return false;
+        }
+
+        if(!verifySignature({publicKey: address, data: outputMap, signature})){
+            console.error('invalid signature from the ${address}');
+            return false;
+        }
+        return true;
+    };
 }
 
 module.exports= Transaction;

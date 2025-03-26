@@ -5,12 +5,14 @@ const bodyParser = require('body-parser');
  const Blockchain = require('./blockchain/index');
  const PubSub = require('./app/pubsub');
  const Wallet= require('./wallet');
+ const TransactionMiner = require('./app/transaction-miner');
  
  const app = express();
  const transactionPool = new TransactionPool();
  const blockchain = new Blockchain();
- const pubsub = new PubSub({ blockchain, transactionPool });
  const wallet = new Wallet();
+ const pubsub = new PubSub({ blockchain, transactionPool });
+ const transactionMiner = new TransactionMiner({ blockchain, transactionPool, wallet, pubsub });
  
  const DEFAULT_PORT = 3000;
  const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
@@ -44,7 +46,11 @@ const bodyParser = require('body-parser');
     if (transaction) {
       transaction.update({ senderWallet: wallet, recipient, amount });
     } else {
-      transaction = wallet.createTransaction({ amount, recipient, transactionPool });
+      transaction = wallet.createTransaction({ 
+        amount, 
+        recipient, 
+        chain: blockchain.chain 
+      });
     }
   } catch (error) {
     return res.status(400).json({ type: 'error', message: error.message });
@@ -60,6 +66,21 @@ const bodyParser = require('body-parser');
  app.get('/api/transaction-pool-map', (req, res) => {
   res.json(transactionPool.transactionMap);
  });
+
+ app.get('/api/mine-transactions', (req, res) => {
+  transactionMiner.mineTransactions();
+
+  res.redirect('/api/blocks');
+});
+
+app.get('/api/wallet-transactions', (req, res) => {
+  const address= wallet.publicKey;
+
+  res.json({
+    address,
+    balance: Wallet.calculateBalance({chain: blockchain.chain, address})
+  });
+});
 
  const syncWithRootState = async () => {
   try {

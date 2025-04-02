@@ -6,3 +6,4 @@ package-lock.json
 dist/
 coverage/" > .gitignore
 node_modules
+node_modules/
